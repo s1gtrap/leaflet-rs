@@ -2,30 +2,30 @@ use leaflet::{Icon, LatLng, Map, MapOptions, Marker, TileLayer, TileLayerOptions
 use leptos::prelude::*;
 use std::{cell::RefCell, rc::Rc};
 use web_sys::js_sys::{Array, Function, Object, Reflect};
-use web_sys::wasm_bindgen::{self, JsValue, prelude::*};
+use web_sys::wasm_bindgen::{JsValue, prelude::*};
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &JsValue);
-}
+static mut GRADIENT_COUNTER: i32 = 0;
 
 fn custom_icon(fill0: &str, fill1: &str, stroke0: &str, stroke1: &str) -> JsValue {
+    let (fill_gradient, stroke_gradient) = unsafe {
+        GRADIENT_COUNTER += 2;
+        (GRADIENT_COUNTER - 2, GRADIENT_COUNTER - 1)
+    };
     let this = Rc::new(RefCell::new(None::<JsValue>));
     let extend_options = Object::new();
     let create_icon = Closure::<dyn Fn() -> JsValue>::new({
         let this = this.clone();
         let fill0 = fill0.to_string();
         let fill1 = fill1.to_string();
+        let stroke0 = stroke0.to_string();
+        let stroke1 = stroke1.to_string();
         move || {
             let this: &Option<JsValue> = &this.borrow();
             // this is not passed to closure
-            log(&JsValue::from_str("createIcon"));
-            log(&this.clone().unwrap());
             let window = web_sys::window().unwrap();
             let document = window.document().unwrap();
             let div = document.create_element("div").unwrap();
-            div.set_inner_html(&format!(r##"<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round" viewBox="0 0 500 820"><defs><linearGradient id="a" x1="0" x2="1" y1="0" y2="0" gradientTransform="rotate(-90 478.727 62.272)scale(37.566)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="{fill0}"/><stop offset="1" stop-color="{fill1}"/></linearGradient><linearGradient id="b" x1="0" x2="1" y1="0" y2="0" gradientTransform="rotate(-90 468.484 54.002)scale(19.053)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2E6C97"/><stop offset="1" stop-color="#3883B7"/></linearGradient></defs><path fill="#FFF" d="M341.864 266.306c0 50.809-41.038 91.846-91.846 91.846s-91.846-41.037-91.846-91.846c0-50.808 41.038-91.846 91.846-91.846s91.846 41.038 91.846 91.846"/><path fill="url(#a)" stroke="url(#b)" stroke-width="1.1" d="M416.544 503.612c-6.573 0-12.044 5.691-12.044 11.866 0 2.778 1.564 6.308 2.694 8.746l9.306 17.872 9.262-17.872c1.13-2.438 2.738-5.791 2.738-8.746 0-6.175-5.383-11.866-11.956-11.866Zm0 7.155a4.714 4.714 0 0 1 4.679 4.71c0 2.588-2.095 4.663-4.679 4.679-2.584-.017-4.679-2.09-4.679-4.679a4.714 4.714 0 0 1 4.679-4.71Z" transform="translate(-7889.1 -9807.44)scale(19.5417)"/></svg>"##));
+            div.set_inner_html(&format!(r##"<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round" viewBox="0 0 500 820"><defs><linearGradient id="g{fill_gradient}" x1="0" x2="1" y1="0" y2="0" gradientTransform="rotate(-90 478.727 62.272)scale(37.566)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="{fill0}"/><stop offset="1" stop-color="{fill1}"/></linearGradient><linearGradient id="g{stroke_gradient}" x1="0" x2="1" y1="0" y2="0" gradientTransform="rotate(-90 468.484 54.002)scale(19.053)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="{stroke0}"/><stop offset="1" stop-color="{stroke1}"/></linearGradient></defs><path fill="#FFF" d="M341.864 266.306c0 50.809-41.038 91.846-91.846 91.846s-91.846-41.037-91.846-91.846c0-50.808 41.038-91.846 91.846-91.846s91.846 41.038 91.846 91.846"/><path fill="url(#g{fill_gradient})" stroke="url(#g{stroke_gradient})" stroke-width="1.1" d="M416.544 503.612c-6.573 0-12.044 5.691-12.044 11.866 0 2.778 1.564 6.308 2.694 8.746l9.306 17.872 9.262-17.872c1.13-2.438 2.738-5.791 2.738-8.746 0-6.175-5.383-11.866-11.956-11.866Zm0 7.155a4.714 4.714 0 0 1 4.679 4.71c0 2.588-2.095 4.663-4.679 4.679-2.584-.017-4.679-2.09-4.679-4.679a4.714 4.714 0 0 1 4.679-4.71Z" transform="translate(-7889.1 -9807.44)scale(19.5417)"/></svg>"##));
             let set_icon_styles =
                 Reflect::get(&this.clone().unwrap(), &JsValue::from_str("_setIconStyles")).unwrap();
             let set_icon_styles: Function = set_icon_styles.into();
@@ -56,8 +56,6 @@ fn custom_icon(fill0: &str, fill1: &str, stroke0: &str, stroke1: &str) -> JsValu
         &Array::of1(&custom_icon_options),
     )
     .unwrap();
-    log(&JsValue::from_str("constructed icon"));
-    log(&custom_icon);
 
     *std::cell::RefCell::<_>::borrow_mut(&this) = Some(custom_icon.clone());
 
@@ -67,6 +65,8 @@ fn custom_icon(fill0: &str, fill1: &str, stroke0: &str, stroke1: &str) -> JsValu
 #[component]
 fn App() -> impl IntoView {
     Effect::new(|| {
+        use rand::prelude::*;
+
         let map = Map::new("map", &MapOptions::default()).unwrap();
 
         let tile_layer_options = TileLayerOptions::default();
@@ -80,10 +80,43 @@ fn App() -> impl IntoView {
         )
         .add_to(&map);
 
-        let custom_icon = custom_icon("#126FC6", "#3883B7", "#2E6C97", "#3883B7");
-        let marker = Marker::new(&LatLng::new(51.477811, -0.001475));
-        marker.set_icon(&Icon::from(custom_icon));
-        marker.add_to(&map);
+        let mut rng = rand::rng();
+        for i in -2..3 {
+            for j in -5..6 {
+                let custom_icon = custom_icon(
+                    &format!(
+                        "#{:02x}{:02x}{:02x}",
+                        rng.random::<u8>(),
+                        rng.random::<u8>(),
+                        rng.random::<u8>(),
+                    ),
+                    &format!(
+                        "#{:02x}{:02x}{:02x}",
+                        rng.random::<u8>(),
+                        rng.random::<u8>(),
+                        rng.random::<u8>(),
+                    ),
+                    &format!(
+                        "#{:02x}{:02x}{:02x}",
+                        rng.random::<u8>(),
+                        rng.random::<u8>(),
+                        rng.random::<u8>(),
+                    ),
+                    &format!(
+                        "#{:02x}{:02x}{:02x}",
+                        rng.random::<u8>(),
+                        rng.random::<u8>(),
+                        rng.random::<u8>(),
+                    ),
+                );
+                let marker = Marker::new(&LatLng::new(
+                    51.477811 + (i as f64 * 0.002),
+                    -0.001475 + (j as f64 * 0.002),
+                ));
+                marker.set_icon(&Icon::from(custom_icon));
+                marker.add_to(&map);
+            }
+        }
 
         map.set_view(&LatLng::new(51.477811, -0.001475), 15.0);
     });
