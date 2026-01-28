@@ -1,0 +1,10 @@
+[package]
+name = "leaflet-leptos-example"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+
+leaflet = { path = "../../" }
+leptos = { version = "0.8.15", features = ["csr"] }

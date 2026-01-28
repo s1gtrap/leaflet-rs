@@ -1,0 +1,30 @@
+use leaflet::{LatLng, Map, MapOptions, TileLayer, TileLayerOptions};
+use leptos::prelude::*;
+
+#[component]
+fn App() -> impl IntoView {
+    Effect::new(|| {
+        let map = Map::new("map", &MapOptions::default()).unwrap();
+
+        let tile_layer_options = TileLayerOptions::default();
+        tile_layer_options.set_attribution(
+            "&copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
+                .to_string(),
+        );
+        TileLayer::new_options(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            &tile_layer_options,
+        )
+        .add_to(&map);
+
+        map.set_view(&LatLng::new(51.477811, -0.001475), 15.0);
+    });
+
+    view! {
+        <div id="map" style="height: 100vh"></div>
+    }
+}
+
+fn main() {
+    leptos::mount::mount_to_body(App);
+}
