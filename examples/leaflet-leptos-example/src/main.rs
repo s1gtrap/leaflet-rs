@@ -1,3 +1,4 @@
+use js_sys::wasm_bindgen::JsValue;
 use leaflet::{Icon, LatLng, Map, MapOptions, Marker, TileLayer, TileLayerOptions};
 use leptos::prelude::*;
 
@@ -18,9 +19,18 @@ fn App() -> impl IntoView {
         .add_to(&map);
 
         let custom_icon_constructor = Icon::extend(&js_sys::Object::new());
-        let custom_icon =
-            js_sys::Reflect::construct(&custom_icon_constructor.into(), &js_sys::Array::new())
-                .unwrap();
+        let custom_icon_options = js_sys::Object::new();
+        js_sys::Reflect::set(
+            &custom_icon_options,
+            &JsValue::from_str("iconUrl"),
+            &JsValue::from_str("https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png"),
+        )
+        .unwrap();
+        let custom_icon = js_sys::Reflect::construct(
+            &custom_icon_constructor.into(),
+            &js_sys::Array::of1(&custom_icon_options),
+        )
+        .unwrap();
 
         let marker = Marker::new(&LatLng::new(51.477811, -0.001475));
         marker.set_icon(&Icon::from(custom_icon));
