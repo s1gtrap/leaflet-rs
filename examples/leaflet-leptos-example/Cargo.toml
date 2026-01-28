@@ -6,6 +6,6 @@ publish = false
 
 [dependencies]
 
-js-sys = { version = "0.3.85", features = [] }
+web-sys = "0.3.85"
 leaflet = { path = "../../" }
 leptos = { version = "0.8.15", features = ["csr"] }

@@ -1,6 +1,7 @@
-use js_sys::wasm_bindgen::{self, JsValue, prelude::*};
 use leaflet::{Icon, LatLng, Map, MapOptions, Marker, TileLayer, TileLayerOptions};
 use leptos::prelude::*;
+use web_sys::js_sys::{Array, Object, Reflect};
+use web_sys::wasm_bindgen::{self, JsValue, prelude::*};
 
 #[wasm_bindgen]
 extern "C" {
@@ -24,23 +25,27 @@ fn App() -> impl IntoView {
         )
         .add_to(&map);
 
-        let extend_options = js_sys::Object::new();
-        let a = Closure::<dyn Fn() -> JsValue>::new(move || {
+        let extend_options = Object::new();
+        let create_icon = Closure::<dyn Fn() -> JsValue>::new(move || {
             log("createIcon");
-            JsValue::NULL
+            let window = web_sys::window().unwrap();
+            let document = window.document().unwrap();
+            let div = document.create_element("div").unwrap();
+            div.set_inner_html("<b>hello world!</b>");
+            div.into()
         });
-        js_sys::Reflect::set(
+        Reflect::set(
             &extend_options,
             &JsValue::from_str("createIcon"),
-            a.as_ref().unchecked_ref(),
+            create_icon.as_ref().unchecked_ref(),
         )
         .unwrap();
-        a.forget();
+        create_icon.forget();
         let custom_icon_constructor = Icon::extend(&extend_options);
-        let custom_icon_options = js_sys::Object::new();
-        let custom_icon = js_sys::Reflect::construct(
+        let custom_icon_options = Object::new();
+        let custom_icon = Reflect::construct(
             &custom_icon_constructor.into(),
-            &js_sys::Array::of1(&custom_icon_options),
+            &Array::of1(&custom_icon_options),
         )
         .unwrap();
 
