@@ -10,6 +10,9 @@ extern "C" {
 
     #[wasm_bindgen(constructor, js_namespace = L)]
     pub fn new(options: &IconOptions) -> Icon;
+
+    #[wasm_bindgen(static_method_of = Icon, js_namespace = L)]
+    pub fn extend(params: &JsValue) -> JsValue;
 }
 
 create_object_with_properties!(

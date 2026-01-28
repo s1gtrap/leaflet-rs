@@ -1,4 +1,4 @@
-use leaflet::{LatLng, Map, MapOptions, TileLayer, TileLayerOptions};
+use leaflet::{Icon, LatLng, Map, MapOptions, Marker, TileLayer, TileLayerOptions};
 use leptos::prelude::*;
 
 #[component]
@@ -16,6 +16,15 @@ fn App() -> impl IntoView {
             &tile_layer_options,
         )
         .add_to(&map);
+
+        let custom_icon_constructor = Icon::extend(&js_sys::Object::new());
+        let custom_icon =
+            js_sys::Reflect::construct(&custom_icon_constructor.into(), &js_sys::Array::new())
+                .unwrap();
+
+        let marker = Marker::new(&LatLng::new(51.477811, -0.001475));
+        marker.set_icon(&Icon::from(custom_icon));
+        marker.add_to(&map);
 
         map.set_view(&LatLng::new(51.477811, -0.001475), 15.0);
     });
