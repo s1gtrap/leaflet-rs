@@ -4,7 +4,7 @@ use std::{cell::RefCell, rc::Rc};
 use web_sys::js_sys::{Array, Function, Object, Reflect};
 use web_sys::wasm_bindgen::{JsValue, prelude::*};
 
-static mut GRADIENT_COUNTER: i32 = 0;
+static mut GRADIENT_COUNTER: i32 = 1;
 
 fn custom_icon(fill0: &str, fill1: &str, stroke0: &str, stroke1: &str) -> JsValue {
     let (fill_gradient, stroke_gradient) = unsafe {
@@ -42,12 +42,61 @@ fn custom_icon(fill0: &str, fill1: &str, stroke0: &str, stroke1: &str) -> JsValu
     )
     .unwrap();
     create_icon.forget();
+    let create_shadow = Closure::<dyn Fn() -> JsValue>::new({
+        let this = this.clone();
+        move || {
+            let this: &Option<JsValue> = &this.borrow();
+            // this is not passed to closure
+            let window = web_sys::window().unwrap();
+            let document = window.document().unwrap();
+            let div = document.create_element("div").unwrap();
+            div.set_inner_html(r#"<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 817.2 820"><radialGradient id="g0" cx="526.6" cy="486.836" r="478.154" fx="275.876" fy="893.983" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:#5c5c5c;stop-opacity:.9477"/><stop offset=".112" style="stop-color:#474747;stop-opacity:.7805"/><stop offset=".34" style="stop-color:#202020;stop-opacity:.4413"/><stop offset=".523" style="stop-color:#090909;stop-opacity:.1692"/><stop offset=".637" style="stop-color:#000;stop-opacity:0"/></radialGradient><path d="M778.8 483.2c-34.3 52.8-101.9 94.1-150.3 124.6L255.7 820 169 522l170.8-299.6v-.1l9.8-17.3C421.3 94.6 585 56.3 702.5 132.5s147.8 240.3 76.3 350.7" style="fill-rule:evenodd;clip-rule:evenodd;fill:url(#g0);fill-opacity:.7;filter:blur(15px)"/></svg>"#);
+            let set_icon_styles =
+                Reflect::get(&this.clone().unwrap(), &JsValue::from_str("_setIconStyles")).unwrap();
+            let set_icon_styles: Function = set_icon_styles.into();
+            set_icon_styles
+                .call2(&this.clone().unwrap(), &div, &JsValue::from_str("shadow"))
+                .unwrap();
+            div.into()
+        }
+    });
+    Reflect::set(
+        &extend_options,
+        &JsValue::from_str("createShadow"),
+        create_shadow.as_ref().unchecked_ref(),
+    )
+    .unwrap();
+    create_shadow.forget();
     let custom_icon_constructor = Icon::extend(&extend_options);
     let custom_icon_options = Object::new();
     Reflect::set(
         &custom_icon_options,
         &JsValue::from_str("iconSize"),
         &Array::of2(&JsValue::from_f64(25.0), &JsValue::from_f64(41.0)),
+    )
+    .unwrap();
+    Reflect::set(
+        &custom_icon_options,
+        &JsValue::from_str("iconAnchor"),
+        &Array::of2(&JsValue::from_f64(12.0), &JsValue::from_f64(41.0)),
+    )
+    .unwrap();
+    Reflect::set(
+        &custom_icon_options,
+        &JsValue::from_str("popupAnchor"),
+        &Array::of2(&JsValue::from_f64(1.0), &JsValue::from_f64(-34.0)),
+    )
+    .unwrap();
+    Reflect::set(
+        &custom_icon_options,
+        &JsValue::from_str("tooltipAnchor"),
+        &Array::of2(&JsValue::from_f64(16.0), &JsValue::from_f64(-28.0)),
+    )
+    .unwrap();
+    Reflect::set(
+        &custom_icon_options,
+        &JsValue::from_str("shadowSize"),
+        &Array::of2(&JsValue::from_f64(41.0), &JsValue::from_f64(41.0)),
     )
     .unwrap();
 
